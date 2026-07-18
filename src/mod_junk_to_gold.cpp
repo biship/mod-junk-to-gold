@@ -9,15 +9,28 @@ public:
 
     void OnPlayerLootItem(Player* player, Item* item, uint32 count, ObjectGuid /*lootguid*/) override
     {
-        if (!item || !item->GetTemplate())
+        ItemTemplate const* proto = item ? item->GetTemplate() : nullptr;
+        if (!proto)
         {
             return;
         }
 
-        if (item->GetTemplate()->Quality == ITEM_QUALITY_POOR)
+        // Never sell quest items or items that start a quest, even if they are
+        // gray quality (e.g. item 6196 "Noboru's Cudgel"). Guard against all
+        // three ways an item can be quest-related: the quest item class, a
+        // non-empty startquest, and quest-item bonding (4/5).
+        if (proto->Class == ITEM_CLASS_QUEST ||
+            proto->StartQuest != 0 ||
+            proto->Bonding == BIND_QUEST_ITEM ||
+            proto->Bonding == BIND_QUEST_ITEM1)
+        {
+            return;
+        }
+
+        if (proto->Quality == ITEM_QUALITY_POOR)
         {
             SendTransactionInformation(player, item, count);
-            player->ModifyMoney(item->GetTemplate()->SellPrice * count);
+            player->ModifyMoney(proto->SellPrice * count);
             player->DestroyItem(item->GetBagSlot(), item->GetSlot(), true);
         }
     }
@@ -80,7 +93,7 @@ private:
     }
 };
 
-void Addmod_junk_to_goldScripts()
+void Addmod_junk_to_gold_Scripts()
 {
     new JunkToGold();
 }
