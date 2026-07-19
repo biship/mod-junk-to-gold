@@ -1,6 +1,12 @@
 #include "Chat.h"
+#include "Config.h"
 #include "Player.h"
 #include "ScriptMgr.h"
+
+#ifdef MOD_PLAYERBOTS
+#include "PlayerbotAI.h"
+#include "PlayerbotMgr.h"
+#endif
 
 class JunkToGold : public PlayerScript
 {
@@ -9,7 +15,38 @@ public:
 
     void OnPlayerLootItem(Player* player, Item* item, uint32 count, ObjectGuid /*lootguid*/) override
     {
-        ItemTemplate const* proto = item ? item->GetTemplate() : nullptr;
+        if (!sConfigMgr->GetOption<bool>("ModJunkToGold.Enable", true))
+        {
+            return;
+        }
+
+        bool enableForRealPlayer = sConfigMgr->GetOption<bool>("ModJunkToGold.EnableForRealPlayer", true);
+        bool enableForPlayerbot = sConfigMgr->GetOption<bool>("ModJunkToGold.EnableForPlayerbot", true);
+        if (!enableForRealPlayer || !enableForPlayerbot)
+        {
+            bool senderIsBot = false;
+#ifdef MOD_PLAYERBOTS
+            PlayerbotAI* senderAI = PlayerbotsMgr::instance().GetPlayerbotAI(player);
+            senderIsBot = (senderAI && senderAI->IsBotAI());
+#endif
+
+            if (!enableForRealPlayer && !senderIsBot)
+            {
+                return;
+            }
+
+            if (!enableForPlayerbot && senderIsBot)
+            {
+                return;
+            }
+        }
+
+        if (!item)
+        {
+            return;
+        }
+
+        ItemTemplate const* proto = item->GetTemplate();
         if (!proto)
         {
             return;
@@ -31,7 +68,7 @@ public:
         {
             SendTransactionInformation(player, item, count);
             player->ModifyMoney(proto->SellPrice * count);
-            player->DestroyItem(item->GetBagSlot(), item->GetSlot(), true);
+            player->DestroyItemCount(item, count, true);
         }
     }
 
@@ -89,11 +126,14 @@ private:
             }
         }
 
-        ChatHandler(player->GetSession()).SendSysMessage(info);
+        if (WorldSession* session = player->GetSession())
+        {
+            ChatHandler(session).SendSysMessage(info);
+        }
     }
 };
 
-void Addmod_junk_to_gold_Scripts()
+void Addmod_junk_to_goldScripts()
 {
     new JunkToGold();
 }
