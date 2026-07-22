@@ -1,28 +1,29 @@
-#
-# Copyright (C) 2016+ AzerothCore <www.azerothcore.org>, released under GNU AGPL v3 license: https://github.com/azerothcore/azerothcore-wotlk/blob/master/LICENSE-AGPL3
-#
-
 [worldserver]
 
 ########################################
 # Mod Junk To Gold Configuration
 ########################################
-#
+
 #	 ModJunkToGold.Enable
 #        Description: Enable Junk To Gold Mod.
 #        Default:     0 - Disabled
 #                     1 - Enabled
-#
+ModJunkToGold.Enable = 1
+
 #	 ModJunkToGold.EnableForRealPlayer
 #        Description: Enable Junk To Gold Mod. for real player
 #        Default:     0 - Disabled
 #                     1 - Enabled
-#
+ModJunkToGold.EnableForRealPlayer = 1
+
 #	 ModJunkToGold.EnableForPlayerbot
 #        Description: Enable Junk To Gold Mod. for playerbot
 #        Default:     0 - Disabled
 #                     1 - Enabled
-
-ModJunkToGold.Enable = 1
-ModJunkToGold.EnableForRealPlayer = 1
 ModJunkToGold.EnableForPlayerbot = 1
+
+# Print a log line on startup / reload
+ModJunkToGold.Announce = 1
+
+# Print a log line on selling an item
+ModJunkToGold.EnableSaleChat = 1
